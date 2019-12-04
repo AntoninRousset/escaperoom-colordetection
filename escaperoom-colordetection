@@ -17,22 +17,51 @@ from matplotlib import pyplot
 from matplotlib import animation
 
 camera = cv2.VideoCapture(0)
+'''
+camera.set(0x00980900, 0)
+camera.set(0x00980901, 32)
+camera.set(0x00980902, 64)
+camera.set(0x00980903, 0)
+camera.set(0x0098090c, 1)
+camera.set(0x00980910, 220)
+camera.set(0x00980918, 3)
+camera.set(0x0098091a, 6500)
+camera.set(0x0098091b, 8)
+camera.set(0x0098091c, 1)
+camera.set(0x009a0901, 0)
+camera.set(0x009a0902, 300)
+camera.set(0x009a0912, 0)
+'''
+camera.set(0x0098090c, 0)
+
 _, frame = camera.read()
+#frame = cv2.imread('phot.jpg')
 
 print(f'Frame dimensions: {frame.shape[:2]}')
 mask = numpy.zeros(frame.shape[:2], numpy.uint8)
-mask[200:280, 0:120] = 255 # Comment this to get full frame
+#mask[200:280, 0:120] = 255
+mask[:, :] = 255
 
 color = 'r'
 
 def animate(i):
     if camera.isOpened():
         ret, frame = camera.read()
+        #frame = cv2.imread('phot.jpg')
         frame = cv2.bitwise_and(frame, frame, mask=mask)
 
-        cv2.imshow('Frame', frame)
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        histr = cv2.calcHist([frame], [1], mask, [256], [0, 256])
+        lower_blue = numpy.array([0, 50, 50])
+        upper_blue = numpy.array([255, 255, 255])
+        found = cv2.inRange(hsv, lower_blue, upper_blue)
+        res = cv2.bitwise_and(frame, frame, mask=found)
+
+        cv2.imshow('Found', res)
+
+        #cv2.imshow('Frame', frame)
+
+        histr = cv2.calcHist([hsv], [0], mask, [256], [0, 256])
         return pyplot.plot(histr, color=color)
 
     return 0
