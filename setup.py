@@ -22,5 +22,9 @@ setuptools.setup(
         'Programming Language :: Python :: 3.6',
     ],
     python_requires='>=3.6, <3.7',
-    install_requires=[]
+    install_requires=[
+    'opencv-python>=3.4.1-r7',
+    'numpy>=1.14.5',
+    'matplotlib>=2.2.2-r1'
+    ]
 )
