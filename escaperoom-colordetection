@@ -13,62 +13,29 @@
 '''
 
 import cv2, numpy
-from matplotlib import pyplot
-from matplotlib import animation
+from argparse import ArgumentParser
 
-camera = cv2.VideoCapture(0)
-'''
-camera.set(0x00980900, 0)
-camera.set(0x00980901, 32)
-camera.set(0x00980902, 64)
-camera.set(0x00980903, 0)
-camera.set(0x0098090c, 1)
-camera.set(0x00980910, 220)
-camera.set(0x00980918, 3)
-camera.set(0x0098091a, 6500)
-camera.set(0x0098091b, 8)
-camera.set(0x0098091c, 1)
-camera.set(0x009a0901, 0)
-camera.set(0x009a0902, 300)
-camera.set(0x009a0912, 0)
-'''
-camera.set(0x0098090c, 0)
+parser = ArgumentParser(description='EscapeRoom server')
+parser.add_argument(
+    '--src', type=str, default='/dev/video0', help='Source video'
+    )
+args = parser.parse_args()
 
-_, frame = camera.read()
-#frame = cv2.imread('phot.jpg')
+import picamera
 
-print(f'Frame dimensions: {frame.shape[:2]}')
-mask = numpy.zeros(frame.shape[:2], numpy.uint8)
-#mask[200:280, 0:120] = 255
-mask[:, :] = 255
+with picamera.PiCamera() as camera:
+    camera.resolution = (1024,1024)
+    camera.shutter_speed = 12562
+    camera.awb_gains = (155/128, 181/64)
+    camera.awb_mode = 'off'
 
-color = 'r'
+    camera.start_recording('video.h264')
 
-def animate(i):
-    if camera.isOpened():
-        ret, frame = camera.read()
-        #frame = cv2.imread('phot.jpg')
-        frame = cv2.bitwise_and(frame, frame, mask=mask)
+    camera.wait_recording(5) #wait for angalog_gain and digital_gain to settle
+    awb_gains = camera.awb_gains
+    camera.exposure_mode = 'off'
+    camera.awb_gains = awb_gains
 
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-
-        lower_blue = numpy.array([0, 50, 50])
-        upper_blue = numpy.array([255, 255, 255])
-        found = cv2.inRange(hsv, lower_blue, upper_blue)
-        res = cv2.bitwise_and(frame, frame, mask=found)
-
-        cv2.imshow('Found', res)
-
-        #cv2.imshow('Frame', frame)
-
-        histr = cv2.calcHist([hsv], [0], mask, [256], [0, 256])
-        return pyplot.plot(histr, color=color)
-
-    return 0
-
-figure, axis = pyplot.subplots()
-ma = animation.FuncAnimation(figure, animate, interval=10, blit=True, repeat=True)
-pyplot.show()
-
-camera.release()
-cv2.destroyAllWindows()
+    for i in range(60):
+        camera.wait_recording(1)
+    camera.stop_recording()
