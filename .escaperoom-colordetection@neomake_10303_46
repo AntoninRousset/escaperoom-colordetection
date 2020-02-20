@@ -1,0 +1,47 @@
+#!/usr/bin/env python
+
+'''
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, version 3.
+ This program is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ General Public License for more details.
+ You should have received a copy of the GNU General Public License
+ along with this program. If not, see <http://www.gnu.org/licenses/>.
+'''
+
+import cv2, numpy
+from matplotlib import pyplot
+from matplotlib import animation
+
+camera = cv2.VideoCapture(0)
+_, frame = camera.read()
+camera.set(cv2.CAP_PROP_AUTO_WB, 0)
+
+print(f'Frame dimensions: {frame.shape[:2]}')
+mask = numpy.zeros(frame.shape[:2], numpy.uint8)
+# mask[200:280, 0:120] = 255 # Comment this to get full frame
+mask[:, :] = 255 # Comment this to get full frame
+
+color = 'r'
+
+def animate(i):
+    if camera.isOpened():
+        ret, frame = camera.read()
+        frame = cv2.bitwise_and(frame, frame, mask=mask)
+
+        cv2.imshow('Frame', frame)
+
+        histr = cv2.calcHist([frame], [1], mask, [256], [0, 256])
+        return pyplot.plot(histr, color=color)
+
+    return 0
+
+figure, axis = pyplot.subplots()
+ma = animation.FuncAnimation(figure, animate, interval=10, blit=True, repeat=True)
+pyplot.show()
+
+camera.release()
+cv2.destroyAllWindows()
