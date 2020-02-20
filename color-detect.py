@@ -76,7 +76,7 @@ class ColorDetector:
     def plot_hist(self, i):
 
         # plot histogram
-        roi = list(self.array.slices())[i]
+        roi = self.array.slices()[i]
         lines = plt.plot(self.img.hist(roi), color='black')
 
         # plot vertical line at each hue range
@@ -146,8 +146,9 @@ class ColorDetector:
 
         def slices(self):
             r = self.RADIUS
-            for x, y in self.positions:
-                yield slice(y - r, y + r), slice(x - r, x + r)
+            return [(slice(y - r, y + r), slice(x - r, x + r))
+                    for x, y in self.positions]
+
 
         def draw(self, img, colors, thickness=1):
 
